@@ -1,0 +1,522 @@
+:root {
+  color-scheme: light;
+  --bg: #fbf7f7;
+  --card: #ffffff;
+  --text: #3d2a2a;
+  --muted: #7a6565;
+  --accent: #c8102e;
+  --accent-dark: #9d0e24;
+  --danger: #7a1020;
+  --border: #eadcdc;
+  --font: 'Segoe UI', system-ui, sans-serif;
+
+  /* Roll geometry — keep in sync with TEM_*_MM in src/lib/labels.ts */
+  --tem-w: 52mm;
+  --tem-h: 22mm;
+  --row-w: 104mm;
+  /* The side panel is narrow; the preview scrolls sideways if needed. */
+  --preview-scale: 1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 12px;
+  font-family: var(--font);
+  background: linear-gradient(180deg, #fde8ea 0%, var(--bg) 40%);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.app-header .btn-secondary {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+}
+
+.subtitle {
+  margin: 4px 0 14px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.app-footer {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+input[type='text'],
+input[type='url'] {
+  flex: 1;
+  min-width: 160px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--accent-dark);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.status {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+}
+
+.status.error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.status.ok {
+  color: var(--accent-dark);
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 6px 10px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.kv dt {
+  color: var(--muted);
+  margin: 0;
+}
+
+.kv dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fde8ea;
+  color: var(--accent-dark);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge.muted {
+  background: #f4eeee;
+  color: var(--muted);
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-block {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fffafa;
+}
+
+.order-header {
+  margin-bottom: 8px;
+}
+
+.order-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.order-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.order-meta {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+td {
+  max-width: 200px;
+}
+
+/* —— Injection label preview (one roll row, scaled) —— */
+
+.tem-dialog {
+  width: calc(100vw - 16px);
+  max-height: calc(100vh - 24px);
+  padding: 12px 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--text);
+}
+
+.tem-dialog::backdrop {
+  background: rgba(90, 24, 32, 0.4);
+}
+
+.tem-dialog-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 8px;
+}
+
+.tem-dialog-bar h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.tem-dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-secondary {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #fff5f5;
+}
+
+.labels-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+  overflow: auto;
+  max-height: 70vh;
+}
+
+.label-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fffafa;
+}
+
+.label-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.label-card-route {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.btn-print {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.btn-print:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.order-print-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.row-injectable {
+  background: #fff1f2;
+}
+
+.row-infusion {
+  background: #eef6ff;
+}
+
+.row-preview-slot {
+  width: calc(var(--row-w) * var(--preview-scale));
+  height: calc(var(--tem-h) * var(--preview-scale));
+  max-width: 100%;
+  overflow: auto;
+  background: #f6ecec;
+  border-radius: 4px;
+  border: 1px dashed var(--border);
+}
+
+.row-preview-scale {
+  width: var(--row-w);
+  height: var(--tem-h);
+  transform: scale(var(--preview-scale));
+  transform-origin: top left;
+}
+
+.tem-row {
+  width: var(--row-w);
+  height: var(--tem-h);
+  display: flex;
+  overflow: hidden;
+}
+
+.tem-slot {
+  width: var(--tem-w);
+  height: var(--tem-h);
+  overflow: hidden;
+}
+
+.tem-slot-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-linear-gradient(
+    45deg,
+    #fff6f6,
+    #fff6f6 2mm,
+    #f0e4e4 2mm,
+    #f0e4e4 4mm
+  );
+  border: 1px dashed #d7c4c4;
+  color: #a08080;
+  font-size: 5pt;
+}
+
+.row-card-reprints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-reprint {
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inj-label {
+  width: var(--tem-w);
+  height: var(--tem-h);
+  padding: 1mm 1.2mm;
+  display: flex;
+  flex-direction: column;
+  /* Spare height is split evenly between all four lines, so a 2-line drug
+     name only tightens the spacing instead of shifting the layout. */
+  justify-content: space-between;
+  gap: 0.2mm;
+  overflow: hidden;
+  background: #fff;
+  color: #000;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  border: 1px solid #bbb;
+}
+
+.inj-label-drug {
+  font-size: 8pt;
+  line-height: 1.05;
+  max-height: 2.1em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: break-word;
+}
+
+.inj-label-mix {
+  font-size: 7.5pt;
+  line-height: 1.05;
+  font-weight: 400;
+}
+
+/* Wraps instead of truncating: a clipped patient name is a safety risk. */
+.inj-label-patient {
+  font-size: 8pt;
+  line-height: 1.05;
+  max-height: 2.1em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: break-word;
+}
+
+.inj-label-k {
+  font-weight: 400;
+}
+
+.inj-label-v {
+  font-weight: 700;
+}
+
+.inj-label-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 2mm;
+  font-size: 7.5pt;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.inf-label {
+  width: var(--tem-w);
+  height: var(--tem-h);
+  padding: 0.8mm 1.2mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.15mm;
+  overflow: hidden;
+  background: #fff;
+  color: #000;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  border: 1px solid #bbb;
+  font-size: 7pt;
+  line-height: 1.05;
+}
+
+.inf-label-line {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  word-break: break-word;
+}
+
+.inf-label-rate {
+  -webkit-line-clamp: 2;
+  max-height: 2.1em;
+}
+
+.inf-label-ba {
+  text-align: right;
+  white-space: nowrap;
+  font-size: 7pt;
+}

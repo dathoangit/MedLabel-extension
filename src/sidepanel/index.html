@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MedLabel</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main>
+      <header class="app-header">
+        <div class="brand">
+          <img class="brand-logo" src="/icons/logo.svg" alt="" />
+          <div>
+            <h1>MedLabel</h1>
+            <p class="subtitle">In tem thuốc tiêm theo chỉ định</p>
+          </div>
+        </div>
+        <button type="button" id="open-settings" class="btn-secondary">
+          Cài đặt
+        </button>
+      </header>
+
+      <section class="card">
+        <form id="lookup-form">
+          <label class="label" for="code-input">Mã hồ sơ hoặc mã bệnh án</label>
+          <div class="row">
+            <input
+              id="code-input"
+              name="code"
+              type="text"
+              inputmode="text"
+              maxlength="64"
+              placeholder="2609230012 hoặc 2641600"
+              autocomplete="off"
+              autofocus
+              required
+            />
+            <button id="submit-btn" type="submit">Tra cứu</button>
+          </div>
+          <p id="hint" class="hint"></p>
+        </form>
+        <p id="status" class="status" hidden></p>
+      </section>
+
+      <section id="patient-card" class="card" hidden>
+        <h2>Người bệnh</h2>
+        <dl id="patient-dl" class="kv"></dl>
+      </section>
+
+      <section id="orders-card" class="card" hidden>
+        <h2>
+          Phiếu điều trị
+          <span id="orders-count" class="badge"></span>
+          <span id="meds-total" class="badge muted"></span>
+        </h2>
+        <p class="hint">
+          <strong>In tem tiêm</strong>: 1 thuốc một ô, bỏ uống và truyền, ô lẻ để
+          trống. <strong>In tem truyền</strong>: 1 thuốc một hàng 2 ô (bệnh nhân
+          1/2, thuốc 2/2). Giấy cuộn 52×22 mm.
+        </p>
+        <div id="orders-list" class="orders-list"></div>
+      </section>
+
+      <footer class="app-footer">
+        Server: <span id="server-origin">…</span>
+      </footer>
+    </main>
+
+    <dialog id="tem-dialog" class="tem-dialog">
+      <div class="tem-dialog-bar">
+        <h2 id="tem-dialog-title">Tem thuốc tiêm</h2>
+        <div class="tem-dialog-actions">
+          <button type="button" id="tem-print-all" class="btn-print">
+            In cả phiếu
+          </button>
+          <form method="dialog">
+            <button type="submit" class="btn-secondary" value="close">
+              Đóng
+            </button>
+          </form>
+        </div>
+      </div>
+      <p id="tem-dialog-hint" class="hint"></p>
+      <div id="tem-dialog-list" class="labels-list"></div>
+    </dialog>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

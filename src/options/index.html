@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MedLabel — Cài đặt</title>
+    <link rel="stylesheet" href="../sidepanel/style.css" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="options">
+      <header>
+        <div class="brand">
+          <img class="brand-logo" src="/icons/logo.svg" alt="" />
+          <h1>MedLabel — Cài đặt</h1>
+        </div>
+        <p class="subtitle">
+          Địa chỉ server MedLabel nội bộ. Thường không cần đổi; chỉ sửa khi IT
+          yêu cầu.
+        </p>
+      </header>
+
+      <section class="card">
+        <form id="settings-form">
+          <label class="label" for="server-origin">Địa chỉ server</label>
+          <div class="row">
+            <input
+              id="server-origin"
+              name="serverOrigin"
+              type="url"
+              placeholder="http://medlabel.local:8080"
+              autocomplete="off"
+              required
+            />
+            <button type="submit">Lưu</button>
+          </div>
+          <p class="hint">Mặc định: <code id="default-origin"></code></p>
+        </form>
+        <div class="row actions">
+          <button type="button" id="test-btn" class="btn-secondary">
+            Kiểm tra kết nối
+          </button>
+          <button type="button" id="reset-btn" class="btn-secondary">
+            Về mặc định
+          </button>
+        </div>
+        <p id="status" class="status" hidden></p>
+      </section>
+
+      <footer class="app-footer">
+        Phiên bản extension: <span id="version"></span>
+      </footer>
+    </main>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

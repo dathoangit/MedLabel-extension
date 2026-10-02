@@ -1,0 +1,2 @@
+yarn check:contract
+yarn lint-staged

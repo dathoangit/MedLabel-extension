@@ -1,0 +1,11 @@
+node_modules
+dist
+release
+.vite
+*.log
+.DS_Store
+
+# Private key that signs the extension. Losing it means every workstation
+# must be reinstalled. Back it up outside this repo.
+# keys/public-key.txt is public and is committed on purpose.
+keys/*.pem
