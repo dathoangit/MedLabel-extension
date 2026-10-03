@@ -35,3 +35,8 @@ export function updateManifestXml(
 </gupdate>
 `;
 }
+
+/** Shared-folder auto-reload signal; kept in sync with package.json at build time. */
+export function versionJsonContents(version: string): string {
+  return `${JSON.stringify({ version }, null, 2)}\n`;
+}

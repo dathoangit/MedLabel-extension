@@ -54,7 +54,7 @@ export default defineManifest({
     page: 'src/options/index.html',
     open_in_tab: true
   },
-  permissions: ['storage', 'sidePanel'],
+  permissions: ['storage', 'sidePanel', 'alarms'],
   host_permissions: [hostPattern(DEFAULT_SERVER_ORIGIN)],
   optional_host_permissions: ['http://*/*', 'https://*/*']
 });

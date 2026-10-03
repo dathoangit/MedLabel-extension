@@ -120,10 +120,24 @@ export const LABEL_PRINT_STYLES = `
     -webkit-line-clamp: 2;
     max-height: 2.1em;
   }
+  .inf-label-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1mm;
+  }
+  /* Pair index: same number on both halves so staff can match them at a glance. */
+  .inf-label-pair {
+    font-size: 11pt;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+  }
   .inf-label-ba {
     text-align: right;
     white-space: nowrap;
     font-size: 7pt;
+    min-width: 0;
   }
 `;
 
@@ -243,14 +257,31 @@ function infusionSlot(inner: string): string {
   return `<div class="tem-slot"><div class="inf-label">${inner}</div></div>`;
 }
 
+function infusionFooter(
+  pairNo: number,
+  maBa: string,
+  half: '1/2' | '2/2'
+): string {
+  return `
+    <div class="inf-label-footer">
+      <span class="inf-label-pair">${escapeHtml(String(pairNo))}</span>
+      <span class="inf-label-ba">Mã BA: ${escapeHtml(maBa)} - ${half}</span>
+    </div>
+  `;
+}
+
 /**
  * One infusion occupies a whole roll row: patient on the left (1/2),
  * drug on the right (2/2). Neither slot is left blank.
+ *
+ * @param pairNo 1-based index in the current print job — printed large on
+ * both halves so staff can rematch them after peeling.
  */
 export function buildInfusionRowHtml(
   patient: PatientInfo,
   med: MedicationLine,
-  printedAt: Date
+  printedAt: Date,
+  pairNo: number
 ): string {
   const tenNb = patient.tenNb ?? '';
   const namSinh = birthYear(patient.ngaySinh);
@@ -275,7 +306,7 @@ export function buildInfusionRowHtml(
       <span class="inj-label-k">Thời gian:</span>
       <span class="inj-label-v">${escapeHtml(formatPrintClock(printedAt))}</span>
     </div>
-    <div class="inf-label-ba">Mã BA: ${escapeHtml(maBa)} - 1/2</div>
+    ${infusionFooter(pairNo, maBa, '1/2')}
   `;
 
   const right = `
@@ -291,7 +322,7 @@ export function buildInfusionRowHtml(
       <span class="inj-label-k">Tốc độ:</span>
       <span class="inj-label-v">${escapeHtml(tocDo)}</span>
     </div>
-    <div class="inf-label-ba">Mã BA: ${escapeHtml(maBa)} - 2/2</div>
+    ${infusionFooter(pairNo, maBa, '2/2')}
   `;
 
   return `<div class="tem-row">${infusionSlot(left)}${infusionSlot(right)}</div>`;
@@ -303,7 +334,29 @@ export function buildInfusionRowsHtml(
   printedAt: Date
 ): string {
   return meds
-    .map((med) => buildInfusionRowHtml(patient, med, printedAt))
+    .map((med, index) =>
+      buildInfusionRowHtml(patient, med, printedAt, index + 1)
+    )
+    .join('');
+}
+
+export type LabelPrintSection = {
+  kind: 'injection' | 'infusion';
+  meds: MedicationLine[];
+};
+
+/** Injection rows first, then infusion rows, on the same roll geometry. */
+export function buildSectionRowsHtml(
+  patient: PatientInfo,
+  sections: LabelPrintSection[],
+  printedAt: Date
+): string {
+  return sections
+    .map((section) =>
+      section.kind === 'infusion'
+        ? buildInfusionRowsHtml(patient, section.meds, printedAt)
+        : buildRowsHtml(patient, section.meds)
+    )
     .join('');
 }
 

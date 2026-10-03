@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { extensionIdFromPublicKey } from './extension-key';
-import { bumpVersion, updateManifestXml } from './version';
+import { bumpVersion, updateManifestXml, versionJsonContents } from './version';
 
 test('bumps each version part and resets lower parts', () => {
   assert.equal(bumpVersion('0.1.9', 'patch'), '0.1.10');
@@ -32,4 +32,8 @@ test('derives a 32-char a-p extension ID', () => {
     Buffer.from('fixed key').toString('base64')
   );
   assert.match(id, /^[a-p]{32}$/);
+});
+
+test('writes version.json for shared-folder auto-reload', () => {
+  assert.equal(versionJsonContents('0.1.2'), '{\n  "version": "0.1.2"\n}\n');
 });

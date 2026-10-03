@@ -1,4 +1,5 @@
 import type { MedicationLine, PatientInfo } from '../contracts/lookup.v1';
+import type { LabelPrintSection } from './labels';
 
 export type PrintKind = 'injection' | 'infusion';
 
@@ -7,6 +8,8 @@ export type PrintJob = {
   kind?: PrintKind;
   patient: PatientInfo;
   meds: MedicationLine[];
+  /** Present when one print window contains more than one label kind. */
+  sections?: LabelPrintSection[];
 };
 
 const PRINT_PAGE_PATH = 'src/print/index.html';
@@ -23,6 +26,17 @@ function jobKey(jobId: string): string {
  * Chrome ignores window.print() inside a side panel, so printing happens in
  * a short-lived popup window that renders the labels and closes itself.
  */
+async function openPrintWindow(job: PrintJob): Promise<void> {
+  const jobId = crypto.randomUUID();
+  await chrome.storage.session.set({ [jobKey(jobId)]: job });
+  await chrome.windows.create({
+    url: chrome.runtime.getURL(`${PRINT_PAGE_PATH}?job=${jobId}`),
+    type: 'popup',
+    focused: true,
+    ...PRINT_WINDOW_SIZE
+  });
+}
+
 export async function printLabels(
   patient: PatientInfo,
   meds: MedicationLine[],
@@ -31,15 +45,24 @@ export async function printLabels(
   if (meds.length === 0) {
     return;
   }
-  const jobId = crypto.randomUUID();
-  const job: PrintJob = { kind, patient, meds };
-  await chrome.storage.session.set({ [jobKey(jobId)]: job });
-  await chrome.windows.create({
-    url: chrome.runtime.getURL(`${PRINT_PAGE_PATH}?job=${jobId}`),
-    type: 'popup',
-    focused: true,
-    ...PRINT_WINDOW_SIZE
-  });
+  await openPrintWindow({ kind, patient, meds });
+}
+
+/** One print dialog. A single non-empty kind reuses the single-kind job. */
+export async function printAllLabels(
+  patient: PatientInfo,
+  sections: LabelPrintSection[]
+): Promise<void> {
+  const filled = sections.filter((section) => section.meds.length > 0);
+  if (filled.length === 0) {
+    return;
+  }
+  const only = filled[0];
+  if (filled.length === 1 && only) {
+    await printLabels(patient, only.meds, only.kind);
+    return;
+  }
+  await openPrintWindow({ patient, meds: [], sections: filled });
 }
 
 /** Reads a job once; a reloaded print window must not print twice. */

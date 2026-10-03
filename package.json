@@ -1,8 +1,8 @@
 {
   "name": "medlabel-extension",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
-  "description": "Chrome extension that prints medication infusion labels from the MedLabel server.",
+  "description": "Chrome extension that prints medication injection and infusion labels from the MedLabel server.",
   "type": "module",
   "scripts": {
     "dev": "vite",

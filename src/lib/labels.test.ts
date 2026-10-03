@@ -7,6 +7,7 @@ import {
   buildLabelInnerHtml,
   buildPrintDocument,
   buildRowHtml,
+  buildSectionRowsHtml,
   chunkIntoRows,
   formatPrintClock,
   TEM_PER_ROW
@@ -112,7 +113,8 @@ test('prints one infusion as a paired 1/2 and 2/2 row', () => {
         { hisServiceProductId: 'k', tenThuoc: 'Natri clorid 0,9g/100ml' }
       ]
     },
-    printedAt
+    printedAt,
+    3
   );
   assert.equal((html.match(/class="tem-slot/g) ?? []).length, 2);
   assert.match(html, /Tên NB:/);
@@ -124,6 +126,7 @@ test('prints one infusion as a paired 1/2 and 2/2 row', () => {
   assert.match(html, /09:05 22\/06\/2026/);
   assert.match(html, /Mã BA: BA01 - 1\/2/);
   assert.match(html, /Mã BA: BA01 - 2\/2/);
+  assert.equal((html.match(/class="inf-label-pair">3</g) ?? []).length, 2);
   assert.match(html, /Thuốc pha:[\s\S]*Natri clorid 0,9g\/100ml/);
   assert.match(html, /Tốc độ:[\s\S]*pha truyền 30g\/p/);
   assert.doesNotMatch(html, /ô trống/);
@@ -133,7 +136,8 @@ test('keeps the infusion mix line blank and escapes HIS text', () => {
   const html = buildInfusionRowHtml(
     { ...patient, tenNb: 'A&B <x>', ngaySinh: null },
     { ...med('NaCl <5%>'), lieuDung: '40g/p & chậm' },
-    printedAt
+    printedAt,
+    1
   );
   assert.match(html, /Thuốc pha:<\/span>\s*<span class="inj-label-v"><\/span>/);
   assert.match(html, /Năm sinh:<\/span>\s*<span class="inj-label-v"><\/span>/);
@@ -141,6 +145,24 @@ test('keeps the infusion mix line blank and escapes HIS text', () => {
   assert.match(html, /NaCl &lt;5%&gt;/);
   assert.match(html, /40g\/p &amp; chậm/);
   assert.doesNotMatch(html, /<x>|<5%>/);
+});
+
+test('prints injection rows before infusion rows in one job', () => {
+  const html = buildSectionRowsHtml(
+    patient,
+    [
+      { kind: 'injection', meds: [med('Tiêm A')] },
+      { kind: 'infusion', meds: [] },
+      { kind: 'infusion', meds: [med('Truyền B')] }
+    ],
+    printedAt
+  );
+  const injectionAt = html.indexOf('Tiêm A');
+  const infusionAt = html.indexOf('Truyền B');
+  assert.ok(injectionAt >= 0 && infusionAt > injectionAt);
+  assert.equal((html.match(/class="tem-row"/g) ?? []).length, 2);
+  assert.match(html, /class="inj-label"/);
+  assert.match(html, /class="inf-label"/);
 });
 
 test('prints one page per infusion', () => {
@@ -152,4 +174,6 @@ test('prints one page per infusion', () => {
   assert.equal((doc.match(/class="tem-row"/g) ?? []).length, 2);
   assert.equal((doc.match(/- 1\/2/g) ?? []).length, 2);
   assert.equal((doc.match(/- 2\/2/g) ?? []).length, 2);
+  assert.equal((doc.match(/class="inf-label-pair">1</g) ?? []).length, 2);
+  assert.equal((doc.match(/class="inf-label-pair">2</g) ?? []).length, 2);
 });
