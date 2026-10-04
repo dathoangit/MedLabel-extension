@@ -86,9 +86,10 @@ function reportPrintError(error: unknown): void {
 function printOrReport(
   patient: PatientInfo,
   meds: MedicationLine[],
-  kind: PrintKind = 'injection'
+  kind: PrintKind = 'injection',
+  infusionPairStart?: number
 ): void {
-  printLabels(patient, meds, kind).catch(reportPrintError);
+  printLabels(patient, meds, kind, infusionPairStart).catch(reportPrintError);
 }
 
 function printAllOrReport(
@@ -233,6 +234,7 @@ function buildInfusionCard(
 ): HTMLElement {
   const card = document.createElement('article');
   card.className = 'label-card';
+  const pairNo = rowIndex + 1;
 
   const header = document.createElement('header');
   header.className = 'label-card-header';
@@ -249,7 +251,7 @@ function buildInfusionCard(
   printRowBtn.className = 'btn-print';
   printRowBtn.textContent = 'In tem';
   printRowBtn.addEventListener('click', () =>
-    printOrReport(patient, [med], 'infusion')
+    printOrReport(patient, [med], 'infusion', pairNo)
   );
 
   header.append(title, printRowBtn);
@@ -260,7 +262,7 @@ function buildInfusionCard(
     patient,
     med,
     new Date(),
-    rowIndex + 1
+    pairNo
   )}</div>`;
 
   const reprints = document.createElement('div');
@@ -271,7 +273,7 @@ function buildInfusionCard(
   setMarquee(reprint, `In riêng: ${med.tenThuoc || 'thuốc'}`);
   reprint.title = 'In lại cả cặp tem 1/2 và 2/2 của thuốc này';
   reprint.addEventListener('click', () =>
-    printOrReport(patient, [med], 'infusion')
+    printOrReport(patient, [med], 'infusion', pairNo)
   );
   reprints.append(reprint);
 

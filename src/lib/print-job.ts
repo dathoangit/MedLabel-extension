@@ -10,6 +10,11 @@ export type PrintJob = {
   meds: MedicationLine[];
   /** Present when one print window contains more than one label kind. */
   sections?: LabelPrintSection[];
+  /**
+   * 1-based pair number for the first infusion in this job. Used when
+   * reprinting a single pair so the bold number still matches the order.
+   */
+  infusionPairStart?: number;
 };
 
 const PRINT_PAGE_PATH = 'src/print/index.html';
@@ -40,12 +45,20 @@ async function openPrintWindow(job: PrintJob): Promise<void> {
 export async function printLabels(
   patient: PatientInfo,
   meds: MedicationLine[],
-  kind: PrintKind = 'injection'
+  kind: PrintKind = 'injection',
+  infusionPairStart?: number
 ): Promise<void> {
   if (meds.length === 0) {
     return;
   }
-  await openPrintWindow({ kind, patient, meds });
+  await openPrintWindow({
+    kind,
+    patient,
+    meds,
+    ...(kind === 'infusion' && infusionPairStart != null
+      ? { infusionPairStart }
+      : {})
+  });
 }
 
 /** One print dialog. A single non-empty kind reuses the single-kind job. */

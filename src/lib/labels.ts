@@ -231,10 +231,13 @@ export function buildPrintDocument(
 </html>`;
 }
 
-/** Clock printed on an infusion label. Fixed format so tests can pin it. */
-export function formatPrintClock(date: Date): string {
+/**
+ * Mix date printed on an infusion label — date only. Nurses write the
+ * clock time by hand when they prepare the bag.
+ */
+export function formatPrintDate(date: Date): string {
   const pad = (value: number): string => String(value).padStart(2, '0');
-  return `${pad(date.getHours())}:${pad(date.getMinutes())} ${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
 }
 
 /** Four-digit birth year from an ISO date. Empty when the date is missing. */
@@ -274,8 +277,9 @@ function infusionFooter(
  * One infusion occupies a whole roll row: patient on the left (1/2),
  * drug on the right (2/2). Neither slot is left blank.
  *
- * @param pairNo 1-based index in the current print job — printed large on
- * both halves so staff can rematch them after peeling.
+ * @param pairNo 1-based index among infusions on the order — printed large on
+ * both halves so staff can rematch them after peeling. Kept when reprinting
+ * a single pair so it still matches the order sequence.
  */
 export function buildInfusionRowHtml(
   patient: PatientInfo,
@@ -304,7 +308,7 @@ export function buildInfusionRowHtml(
     </div>
     <div class="inf-label-line">
       <span class="inj-label-k">Thời gian:</span>
-      <span class="inj-label-v">${escapeHtml(formatPrintClock(printedAt))}</span>
+      <span class="inj-label-v">${escapeHtml(formatPrintDate(printedAt))}</span>
     </div>
     ${infusionFooter(pairNo, maBa, '1/2')}
   `;
@@ -331,11 +335,13 @@ export function buildInfusionRowHtml(
 export function buildInfusionRowsHtml(
   patient: PatientInfo,
   meds: MedicationLine[],
-  printedAt: Date
+  printedAt: Date,
+  /** 1-based pair number for the first med; later meds continue from there. */
+  pairStart = 1
 ): string {
   return meds
     .map((med, index) =>
-      buildInfusionRowHtml(patient, med, printedAt, index + 1)
+      buildInfusionRowHtml(patient, med, printedAt, pairStart + index)
     )
     .join('');
 }
@@ -363,7 +369,8 @@ export function buildSectionRowsHtml(
 export function buildInfusionPrintDocument(
   patient: PatientInfo,
   meds: MedicationLine[],
-  printedAt: Date
+  printedAt: Date,
+  pairStart = 1
 ): string {
   return `<!doctype html>
 <html lang="vi">
@@ -372,6 +379,6 @@ export function buildInfusionPrintDocument(
   <title>Tem thuốc truyền</title>
   <style>${LABEL_PRINT_STYLES}</style>
 </head>
-<body>${buildInfusionRowsHtml(patient, meds, printedAt)}</body>
+<body>${buildInfusionRowsHtml(patient, meds, printedAt, pairStart)}</body>
 </html>`;
 }

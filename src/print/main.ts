@@ -36,7 +36,12 @@ async function run(): Promise<void> {
       job.kind === 'infusion' ? 'Tem thuốc truyền' : 'Tem thuốc tiêm';
     document.body.innerHTML =
       job.kind === 'infusion'
-        ? buildInfusionRowsHtml(job.patient, job.meds, printedAt)
+        ? buildInfusionRowsHtml(
+            job.patient,
+            job.meds,
+            printedAt,
+            job.infusionPairStart ?? 1
+          )
         : buildRowsHtml(job.patient, job.meds);
   }
 

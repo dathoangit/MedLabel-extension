@@ -4,12 +4,13 @@ import type { MedicationLine, PatientInfo } from '../contracts/lookup.v1';
 import {
   buildInfusionPrintDocument,
   buildInfusionRowHtml,
+  buildInfusionRowsHtml,
   buildLabelInnerHtml,
   buildPrintDocument,
   buildRowHtml,
   buildSectionRowsHtml,
   chunkIntoRows,
-  formatPrintClock,
+  formatPrintDate,
   TEM_PER_ROW
 } from './labels';
 
@@ -99,8 +100,8 @@ test('prints one page per roll row', () => {
 
 const printedAt = new Date(2026, 5, 22, 9, 5);
 
-test('formats the print clock as HH:mm dd/MM/yyyy', () => {
-  assert.equal(formatPrintClock(printedAt), '09:05 22/06/2026');
+test('formats the mix date as dd/MM/yyyy without a clock time', () => {
+  assert.equal(formatPrintDate(printedAt), '22/06/2026');
 });
 
 test('prints one infusion as a paired 1/2 and 2/2 row', () => {
@@ -123,7 +124,8 @@ test('prints one infusion as a paired 1/2 and 2/2 row', () => {
     html,
     /Điều dưỡng:<\/span>\s*<span class="inj-label-v"><\/span>/
   );
-  assert.match(html, /09:05 22\/06\/2026/);
+  assert.match(html, /Thời gian:[\s\S]*22\/06\/2026/);
+  assert.doesNotMatch(html, /09:05/);
   assert.match(html, /Mã BA: BA01 - 1\/2/);
   assert.match(html, /Mã BA: BA01 - 2\/2/);
   assert.equal((html.match(/class="inf-label-pair">3</g) ?? []).length, 2);
@@ -176,4 +178,10 @@ test('prints one page per infusion', () => {
   assert.equal((doc.match(/- 2\/2/g) ?? []).length, 2);
   assert.equal((doc.match(/class="inf-label-pair">1</g) ?? []).length, 2);
   assert.equal((doc.match(/class="inf-label-pair">2</g) ?? []).length, 2);
+});
+
+test('keeps order pair numbers when reprinting a single infusion', () => {
+  const html = buildInfusionRowsHtml(patient, [med('Truyền B')], printedAt, 2);
+  assert.equal((html.match(/class="inf-label-pair">2</g) ?? []).length, 2);
+  assert.doesNotMatch(html, /class="inf-label-pair">1</);
 });
