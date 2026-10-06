@@ -1,8 +1,7 @@
 import {
   buildInfusionRowsHtml,
   buildRowsHtml,
-  buildSectionRowsHtml,
-  LABEL_PRINT_STYLES
+  printStylesForKind
 } from '../lib/labels';
 import { takePrintJob } from '../lib/print-job';
 
@@ -18,32 +17,18 @@ async function run(): Promise<void> {
     return;
   }
 
+  const kind = job.kind === 'infusion' ? 'infusion' : 'injection';
   const style = document.createElement('style');
-  style.textContent = LABEL_PRINT_STYLES;
+  style.textContent = printStylesForKind(kind);
   document.head.append(style);
 
   const printedAt = new Date();
-  const sections = job.sections?.filter((section) => section.meds.length > 0);
-  if (sections && sections.length > 0) {
-    document.title = 'Tem thuốc';
-    document.body.innerHTML = buildSectionRowsHtml(
-      job.patient,
-      sections,
-      printedAt
-    );
-  } else {
-    document.title =
-      job.kind === 'infusion' ? 'Tem thuốc truyền' : 'Tem thuốc tiêm';
-    document.body.innerHTML =
-      job.kind === 'infusion'
-        ? buildInfusionRowsHtml(
-            job.patient,
-            job.meds,
-            printedAt,
-            job.infusionPairStart ?? 1
-          )
-        : buildRowsHtml(job.patient, job.meds);
-  }
+  document.title =
+    kind === 'infusion' ? 'Tem thuốc truyền' : 'Tem thuốc tiêm';
+  document.body.innerHTML =
+    kind === 'infusion'
+      ? buildInfusionRowsHtml(job.patient, job.meds, printedAt)
+      : buildRowsHtml(job.patient, job.meds);
 
   await document.fonts.ready;
   window.addEventListener('afterprint', () => window.close());

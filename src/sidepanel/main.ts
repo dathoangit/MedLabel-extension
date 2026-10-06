@@ -86,10 +86,9 @@ function reportPrintError(error: unknown): void {
 function printOrReport(
   patient: PatientInfo,
   meds: MedicationLine[],
-  kind: PrintKind = 'injection',
-  infusionPairStart?: number
+  kind: PrintKind = 'injection'
 ): void {
-  printLabels(patient, meds, kind, infusionPairStart).catch(reportPrintError);
+  printLabels(patient, meds, kind).catch(reportPrintError);
 }
 
 function printAllOrReport(
@@ -229,40 +228,34 @@ function buildRowCard(
 
 function buildInfusionCard(
   patient: PatientInfo,
-  med: MedicationLine,
-  rowIndex: number
+  med: MedicationLine
 ): HTMLElement {
   const card = document.createElement('article');
   card.className = 'label-card';
-  const pairNo = rowIndex + 1;
 
   const header = document.createElement('header');
   header.className = 'label-card-header';
 
   const title = document.createElement('p');
   title.className = 'label-card-route';
-  setMarquee(
-    title,
-    `2/2 ô · ${med.tenThuoc || 'thuốc'}`
-  );
+  setMarquee(title, med.tenThuoc || 'thuốc');
 
   const printRowBtn = document.createElement('button');
   printRowBtn.type = 'button';
   printRowBtn.className = 'btn-print';
   printRowBtn.textContent = 'In tem';
   printRowBtn.addEventListener('click', () =>
-    printOrReport(patient, [med], 'infusion', pairNo)
+    printOrReport(patient, [med], 'infusion')
   );
 
   header.append(title, printRowBtn);
 
   const slot = document.createElement('div');
-  slot.className = 'row-preview-slot';
-  slot.innerHTML = `<div class="row-preview-scale">${buildInfusionRowHtml(
+  slot.className = 'inf-preview-slot';
+  slot.innerHTML = `<div class="inf-preview-scale">${buildInfusionRowHtml(
     patient,
     med,
-    new Date(),
-    pairNo
+    new Date()
   )}</div>`;
 
   const reprints = document.createElement('div');
@@ -271,9 +264,9 @@ function buildInfusionCard(
   reprint.type = 'button';
   reprint.className = 'btn-secondary btn-reprint';
   setMarquee(reprint, `In riêng: ${med.tenThuoc || 'thuốc'}`);
-  reprint.title = 'In lại cả cặp tem 1/2 và 2/2 của thuốc này';
+  reprint.title = 'In lại tem truyền của thuốc này';
   reprint.addEventListener('click', () =>
-    printOrReport(patient, [med], 'infusion', pairNo)
+    printOrReport(patient, [med], 'infusion')
   );
   reprints.append(reprint);
 
@@ -347,9 +340,7 @@ function openTemDialog(patient: PatientInfo, order: TreatmentOrder): void {
         `Tem truyền (${infusions.length})`,
         bothKinds ? 'Chỉ in tem truyền' : null,
         bothKinds ? () => printOrReport(patient, infusions, 'infusion') : null,
-        infusions.map((med, rowIndex) =>
-          buildInfusionCard(patient, med, rowIndex)
-        )
+        infusions.map((med) => buildInfusionCard(patient, med))
       )
     );
   }

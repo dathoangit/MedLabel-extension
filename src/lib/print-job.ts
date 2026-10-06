@@ -8,13 +8,6 @@ export type PrintJob = {
   kind?: PrintKind;
   patient: PatientInfo;
   meds: MedicationLine[];
-  /** Present when one print window contains more than one label kind. */
-  sections?: LabelPrintSection[];
-  /**
-   * 1-based pair number for the first infusion in this job. Used when
-   * reprinting a single pair so the bold number still matches the order.
-   */
-  infusionPairStart?: number;
 };
 
 const PRINT_PAGE_PATH = 'src/print/index.html';
@@ -45,37 +38,28 @@ async function openPrintWindow(job: PrintJob): Promise<void> {
 export async function printLabels(
   patient: PatientInfo,
   meds: MedicationLine[],
-  kind: PrintKind = 'injection',
-  infusionPairStart?: number
+  kind: PrintKind = 'injection'
 ): Promise<void> {
   if (meds.length === 0) {
     return;
   }
-  await openPrintWindow({
-    kind,
-    patient,
-    meds,
-    ...(kind === 'infusion' && infusionPairStart != null
-      ? { infusionPairStart }
-      : {})
-  });
+  await openPrintWindow({ kind, patient, meds });
 }
 
-/** One print dialog. A single non-empty kind reuses the single-kind job. */
+/**
+ * Injection and infusion use different sticker sizes, so each kind gets its
+ * own print window (and therefore its own @page geometry).
+ */
 export async function printAllLabels(
   patient: PatientInfo,
   sections: LabelPrintSection[]
 ): Promise<void> {
-  const filled = sections.filter((section) => section.meds.length > 0);
-  if (filled.length === 0) {
-    return;
+  for (const section of sections) {
+    if (section.meds.length === 0) {
+      continue;
+    }
+    await printLabels(patient, section.meds, section.kind);
   }
-  const only = filled[0];
-  if (filled.length === 1 && only) {
-    await printLabels(patient, only.meds, only.kind);
-    return;
-  }
-  await openPrintWindow({ patient, meds: [], sections: filled });
 }
 
 /** Reads a job once; a reloaded print window must not print twice. */

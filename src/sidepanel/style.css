@@ -10,12 +10,16 @@
   --border: #eadcdc;
   --font: 'Segoe UI', system-ui, sans-serif;
 
-  /* Roll geometry — keep in sync with TEM_*_MM in src/lib/labels.ts */
+  /* Roll geometry — keep in sync with TEM_*_MM / INF_*_MM in src/lib/labels.ts */
   --tem-w: 52mm;
   --tem-h: 22mm;
   --row-w: 104mm;
+  --inf-w: 55mm;
+  --inf-h: 60mm;
+  --inf-time-gap: 15mm;
   /* The side panel is narrow; the preview scrolls sideways if needed. */
   --preview-scale: 1;
+  --inf-preview-scale: 0.85;
 }
 
 * {
@@ -452,11 +456,34 @@ td {
   border: 1px dashed var(--border);
 }
 
+.inf-preview-slot {
+  width: calc(var(--inf-w) * var(--inf-preview-scale));
+  height: calc(var(--inf-h) * var(--inf-preview-scale));
+  max-width: 100%;
+  overflow: auto;
+  background: #eef6ff;
+  border-radius: 4px;
+  border: 1px dashed var(--border);
+}
+
 .row-preview-scale {
   width: var(--row-w);
   height: var(--tem-h);
   transform: scale(var(--preview-scale));
   transform-origin: top left;
+}
+
+.inf-preview-scale {
+  width: var(--inf-w);
+  height: var(--inf-h);
+  transform: scale(var(--inf-preview-scale));
+  transform-origin: top left;
+}
+
+.inf-page {
+  width: var(--inf-w);
+  height: var(--inf-h);
+  overflow: hidden;
 }
 
 .tem-row {
@@ -531,10 +558,10 @@ td {
   word-break: break-word;
 }
 
-.inj-label-mix {
+.inj-label-qty {
   font-size: 7.5pt;
   line-height: 1.05;
-  font-weight: 400;
+  white-space: nowrap;
 }
 
 /* Wraps instead of truncating: a clipped patient name is a safety risk. */
@@ -567,52 +594,70 @@ td {
 }
 
 .inf-label {
-  width: var(--tem-w);
-  height: var(--tem-h);
-  padding: 0.8mm 1.2mm;
+  width: var(--inf-w);
+  height: var(--inf-h);
+  padding: 1.5mm 2mm;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 0.15mm;
+  gap: 0;
   overflow: hidden;
   background: #fff;
   color: #000;
   font-family: 'Segoe UI', Arial, sans-serif;
   border: 1px solid #bbb;
-  font-size: 7pt;
-  line-height: 1.05;
+  font-size: 9pt;
+  line-height: 1.25;
+}
+
+.inf-label-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 9.5pt;
+  line-height: 1.2;
+  padding-bottom: 1.5mm;
+  border-bottom: 0.3mm solid #000;
+  flex-shrink: 0;
+}
+
+.inf-label-patient {
+  padding: 1.5mm 0;
+  border-bottom: 0.3mm solid #000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8mm;
+  flex-shrink: 0;
+}
+
+.inf-label-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 2mm;
+  white-space: nowrap;
+}
+
+.inf-label-drug {
+  padding-top: 1.5mm;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2mm;
+  flex: 1;
+  min-height: 0;
 }
 
 .inf-label-line {
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
   word-break: break-word;
 }
 
-.inf-label-rate {
-  -webkit-line-clamp: 2;
-  max-height: 2.1em;
+.inf-label-drug-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  max-height: 3.8em;
+  overflow: hidden;
 }
 
-.inf-label-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 1mm;
-}
-
-.inf-label-pair {
-  font-size: 11pt;
-  font-weight: 700;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.inf-label-ba {
-  text-align: right;
-  white-space: nowrap;
-  font-size: 7pt;
-  min-width: 0;
+.inf-label-time-gap {
+  display: inline-block;
+  min-width: var(--inf-time-gap);
 }

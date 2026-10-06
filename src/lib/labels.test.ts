@@ -4,11 +4,9 @@ import type { MedicationLine, PatientInfo } from '../contracts/lookup.v1';
 import {
   buildInfusionPrintDocument,
   buildInfusionRowHtml,
-  buildInfusionRowsHtml,
   buildLabelInnerHtml,
   buildPrintDocument,
   buildRowHtml,
-  buildSectionRowsHtml,
   chunkIntoRows,
   formatPrintDate,
   TEM_PER_ROW
@@ -56,6 +54,18 @@ test('escapes HIS text so it cannot inject markup into the label', () => {
   assert.doesNotMatch(html, /<Thị>/);
 });
 
+test('prints age and medical record number in bold', () => {
+  const html = buildLabelInnerHtml(patient, med('Omeprazole'));
+  assert.match(
+    html,
+    /Tuổi: <span class="inj-label-v">7<\/span>/
+  );
+  assert.match(
+    html,
+    /Mã BA: <span class="inj-label-v">BA01<\/span>/
+  );
+});
+
 test('leaves the odd slot of a row blank when printing', () => {
   const html = buildRowHtml(patient, [med('A')]);
   assert.equal((html.match(/class="tem-slot/g) ?? []).length, 2);
@@ -66,7 +76,7 @@ test('leaves the odd slot of a row blank when printing', () => {
   );
 });
 
-test('prints accompanying drug names on the mix line', () => {
+test('appends accompanying drugs to the drug name, comma-separated', () => {
   const html = buildLabelInnerHtml(patient, {
     ...med('Omeprazole'),
     thuocDungKem: [
@@ -74,21 +84,29 @@ test('prints accompanying drug names on the mix line', () => {
       { hisServiceProductId: '2', tenThuoc: 'Glucose 5%' }
     ]
   });
-  assert.match(html, /Thuốc pha:/);
-  assert.match(html, /Natri Clorid 0,9% \+ Glucose 5%/);
+  assert.doesNotMatch(html, /Thuốc pha:/);
+  assert.match(
+    html,
+    /Tên thuốc:<\/span>\s*<span class="inj-label-v">Omeprazole, Natri Clorid 0,9%, Glucose 5%<\/span>/
+  );
 });
 
-test('keeps the mix label blank when there is no accompanying drug', () => {
-  const html = buildLabelInnerHtml(patient, med('Omeprazole'));
-  assert.match(html, /Thuốc pha:<\/span>\s*<span class="inj-label-v"><\/span>/);
+test('leaves the SL line blank for handwritten quantity', () => {
+  const html = buildLabelInnerHtml(patient, {
+    ...med('Omeprazole'),
+    soLuong: 2,
+    dvt: 'Ống'
+  });
+  assert.match(html, /SL:<\/span>\s*<span class="inj-label-v"><\/span>/);
+  assert.doesNotMatch(html, /2 Ống/);
 });
 
-test('escapes accompanying drug names', () => {
+test('escapes accompanying drug names on the drug line', () => {
   const html = buildLabelInnerHtml(patient, {
     ...med('Omeprazole'),
     thuocDungKem: [{ hisServiceProductId: '1', tenThuoc: 'A&B <x>' }]
   });
-  assert.match(html, /A&amp;B &lt;x&gt;/);
+  assert.match(html, /Omeprazole, A&amp;B &lt;x&gt;/);
   assert.doesNotMatch(html, /<x>/);
 });
 
@@ -96,6 +114,7 @@ test('prints one page per roll row', () => {
   const doc = buildPrintDocument(patient, [med('A'), med('B'), med('C')]);
   assert.equal((doc.match(/class="tem-row"/g) ?? []).length, 2);
   assert.match(doc, /@page \{ size: 104mm 22mm; margin: 0; \}/);
+  assert.match(doc, /transform: translateX\(-1\.5mm\);/);
 });
 
 const printedAt = new Date(2026, 5, 22, 9, 5);
@@ -104,9 +123,9 @@ test('formats the mix date as dd/MM/yyyy without a clock time', () => {
   assert.equal(formatPrintDate(printedAt), '22/06/2026');
 });
 
-test('prints one infusion as a paired 1/2 and 2/2 row', () => {
+test('prints one infusion as a 5.5×6 cm three-part sticker', () => {
   const html = buildInfusionRowHtml(
-    { ...patient, ngaySinh: '1958-03-04T00:00:00.000Z' },
+    patient,
     {
       ...med('Axuka 1000mg+200mg'),
       lieuDung: 'pha truyền 30g/p',
@@ -114,74 +133,52 @@ test('prints one infusion as a paired 1/2 and 2/2 row', () => {
         { hisServiceProductId: 'k', tenThuoc: 'Natri clorid 0,9g/100ml' }
       ]
     },
-    printedAt,
-    3
+    printedAt
   );
-  assert.equal((html.match(/class="tem-slot/g) ?? []).length, 2);
-  assert.match(html, /Tên NB:/);
-  assert.match(html, /Năm sinh:[\s\S]*1958/);
+  assert.match(html, /class="inf-page"/);
+  assert.match(html, /Nhãn túi\/ chai dịch truyền, BTĐ/);
+  assert.match(html, /Tên:<\/span>\s*<span class="inj-label-v">Trần &lt;Thị&gt; B<\/span>/);
+  assert.match(
+    html,
+    /Tuổi: <span class="inj-label-v">7<\/span>[\s\S]*Mã BA: <span class="inj-label-v">BA01<\/span>/
+  );
+  assert.match(
+    html,
+    /Thuốc, dung môi:<\/span>\s*<span class="inj-label-v">Axuka 1000mg\+200mg, Natri clorid 0,9g\/100ml<\/span>/
+  );
+  assert.match(html, /SL:<\/span>\s*<span class="inj-label-v"><\/span>/);
+  assert.match(html, /Tốc độ:[\s\S]*pha truyền 30g\/p/);
+  assert.match(html, /Giờ pha:[\s\S]*inf-label-time-gap[\s\S]*22\/06\/2026/);
+  assert.doesNotMatch(html, /09:05/);
   assert.match(
     html,
     /Điều dưỡng:<\/span>\s*<span class="inj-label-v"><\/span>/
   );
-  assert.match(html, /Thời gian:[\s\S]*22\/06\/2026/);
-  assert.doesNotMatch(html, /09:05/);
-  assert.match(html, /Mã BA: BA01 - 1\/2/);
-  assert.match(html, /Mã BA: BA01 - 2\/2/);
-  assert.equal((html.match(/class="inf-label-pair">3</g) ?? []).length, 2);
-  assert.match(html, /Thuốc pha:[\s\S]*Natri clorid 0,9g\/100ml/);
-  assert.match(html, /Tốc độ:[\s\S]*pha truyền 30g\/p/);
-  assert.doesNotMatch(html, /ô trống/);
+  assert.doesNotMatch(html, /1\/2|2\/2|Thuốc pha:|Năm sinh:/);
 });
 
-test('keeps the infusion mix line blank and escapes HIS text', () => {
+test('keeps solvent blank and escapes HIS text on infusion labels', () => {
   const html = buildInfusionRowHtml(
-    { ...patient, tenNb: 'A&B <x>', ngaySinh: null },
+    { ...patient, tenNb: 'A&B <x>' },
     { ...med('NaCl <5%>'), lieuDung: '40g/p & chậm' },
-    printedAt,
-    1
+    printedAt
   );
-  assert.match(html, /Thuốc pha:<\/span>\s*<span class="inj-label-v"><\/span>/);
-  assert.match(html, /Năm sinh:<\/span>\s*<span class="inj-label-v"><\/span>/);
+  assert.match(
+    html,
+    /Thuốc, dung môi:<\/span>\s*<span class="inj-label-v">NaCl &lt;5%&gt;<\/span>/
+  );
   assert.match(html, /A&amp;B &lt;x&gt;/);
-  assert.match(html, /NaCl &lt;5%&gt;/);
   assert.match(html, /40g\/p &amp; chậm/);
   assert.doesNotMatch(html, /<x>|<5%>/);
 });
 
-test('prints injection rows before infusion rows in one job', () => {
-  const html = buildSectionRowsHtml(
-    patient,
-    [
-      { kind: 'injection', meds: [med('Tiêm A')] },
-      { kind: 'infusion', meds: [] },
-      { kind: 'infusion', meds: [med('Truyền B')] }
-    ],
-    printedAt
-  );
-  const injectionAt = html.indexOf('Tiêm A');
-  const infusionAt = html.indexOf('Truyền B');
-  assert.ok(injectionAt >= 0 && infusionAt > injectionAt);
-  assert.equal((html.match(/class="tem-row"/g) ?? []).length, 2);
-  assert.match(html, /class="inj-label"/);
-  assert.match(html, /class="inf-label"/);
-});
-
-test('prints one page per infusion', () => {
+test('prints one page per infusion on 55×60 mm media', () => {
   const doc = buildInfusionPrintDocument(
     patient,
     [med('A'), med('B')],
     printedAt
   );
-  assert.equal((doc.match(/class="tem-row"/g) ?? []).length, 2);
-  assert.equal((doc.match(/- 1\/2/g) ?? []).length, 2);
-  assert.equal((doc.match(/- 2\/2/g) ?? []).length, 2);
-  assert.equal((doc.match(/class="inf-label-pair">1</g) ?? []).length, 2);
-  assert.equal((doc.match(/class="inf-label-pair">2</g) ?? []).length, 2);
-});
-
-test('keeps order pair numbers when reprinting a single infusion', () => {
-  const html = buildInfusionRowsHtml(patient, [med('Truyền B')], printedAt, 2);
-  assert.equal((html.match(/class="inf-label-pair">2</g) ?? []).length, 2);
-  assert.doesNotMatch(html, /class="inf-label-pair">1</);
+  assert.equal((doc.match(/class="inf-page"/g) ?? []).length, 2);
+  assert.match(doc, /@page \{ size: 55mm 60mm; margin: 0; \}/);
+  assert.match(doc, /min-width: 15mm/);
 });
